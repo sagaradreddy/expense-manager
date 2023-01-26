@@ -1,25 +1,99 @@
-import logo from './logo.svg';
-import './App.css';
+import React,{Component} from "react";
+import { ToastContainer } from "react-toastify"
+import Display from "./component/Display";
+import History from "./component/History";
+import AddExpense from "./component/AddExpense";
+import AddIncome from "./component/AddIncome";
 
-function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
+import "./App.css"
+import { readAll  } from "./util/transaction";
+
+class App extends Component{
+  constructor(props){
+    super(props);
+    this.state={
+      activeTab:"income",
+      transactions : [],
+      income : 0,
+      expense : 0,
+      balance : 0
+    }
+  }
+  componentDidMount(){
+    let data = readAll()
+
+    this.setState({
+      transactions: data
+    });
+    this.updateValue()
+  }
+  
+  
+  // toggleTab(){
+  //   if(this.state.activeTab === "income"){
+  //     this.setState({
+  //       activeTab:"expense"
+  //     })
+  //   }else{
+  //     this.setState({
+  //       activeTab:"income"
+  //     })
+  //   }
+  // }
+    toggleIncome(val){
+      this.setState({
+        activeTab:"income"
+      })
+    }
+    toggleExpense(val){
+      this.setState({
+        activeTab:"expense"
+      })
+    }
+
+    updateValue(){
+      const amount = readAll().map(item=> item.amount)
+      // console.log('amount=',amount)
+      const total = amount.reduce((acc,item)=>(acc += Number(item)),0).toFixed(2);
+
+      const inc =amount.filter(item=>item>0).reduce((acc,item)=>(acc += Number(item)),0).toFixed(2);
+      const exp = (amount.filter(item=>item<0).reduce((acc,item)=>(acc += Number(item)),0)* -1).toFixed(2);
+      this.setState({
+        balance:total,
+        income:inc,
+        expense:exp
+      })
+    }
+  render(){
+    const{activeTab}=this.state;
+    return(
+      <div className="container">
+        <h3>Your balance</h3>
+        <h1>&#8377;{this.state.balance}</h1>
+
+        <ToastContainer autoClose={4000} position={'bottom-right'} />
+
+        <Display income={this.state.income} expense = {this.state.expense}/>
+        <History/>
+        <div className="transaction">
+          <div className="tabs">
+            <ul className="nav">
+              <li onClick={this.toggleIncome.bind(this)} className={activeTab === "income"? "active":"" }>Income</li>
+              <li onClick={this.toggleExpense.bind(this)} className={activeTab === "expense"? "active":"" }>Expense</li>
+            </ul>
+            <div className="outlet">
+              {
+                activeTab === "income"? <AddIncome/>:<AddExpense/>
+              }
+                
+                
+            </div>
+          </div>
+        
+        </div>
+        
+      </div>
+    )
+  }
 }
-
-export default App;
+export default App
